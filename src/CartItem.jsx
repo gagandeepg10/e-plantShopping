@@ -3,13 +3,16 @@ import { useSelector, useDispatch } from 'react-redux';
 import { removeItem, updateQuantity } from './CartSlice';
 import './CartItem.css';
 
-const CartItem = ({ onContinueShopping }) => {
+const CartItem = ({ onContinueShopping, setAddedToCart }) => {
     const cart = useSelector(state => state.cart.items);
     const dispatch = useDispatch();
 
-    // Calculate total amount for all products in the cart
     const calculateTotalAmount = () => {
-        return cart.reduce((total, item) => total + item.quantity * item.cost, 0).toFixed(2);
+        return cart.reduce((total, item) => {
+            // Remove the dollar sign and convert the cost to a number
+            const numericCost = parseFloat(item.cost.replace('$', ''));
+            return total + item.quantity * numericCost;
+        }, 0).toFixed(2); // Ensure the result has two decimal places
     };
 
     const handleContinueShopping = (e) => {
@@ -17,25 +20,33 @@ const CartItem = ({ onContinueShopping }) => {
     };
 
     const handleIncrement = (item) => {
-        dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }));
+        dispatch(updateQuantity({ name: item.name, quantity: item.quantity + 1 }));
 
     };
 
     const handleDecrement = (item) => {
         if (item.quantity > 1) {
-            dispatch(updateQuantity({ id: item.id, quantity: item.quantity - 1 }));
+            dispatch(updateQuantity({ name: item.name, quantity: item.quantity - 1 }));
         } else {
-            dispatch(removeItem({ id: item.id }));
+            handleRemove(item);
         }
     };
 
     const handleRemove = (item) => {
-        dispatch(removeItem({ id: item.id }));
+        dispatch(removeItem(item.name));
+        setAddedToCart((prevState) => ({
+            ...prevState,
+            [item.name]: false,
+        }));
     };
 
     // Calculate total cost based on quantity for an item
+    // const calculateTotalCost = (item) => {
+    //     return (item.quantity * item.cost).toFixed(2);
+    // };
     const calculateTotalCost = (item) => {
-        return (item.quantity * item.cost).toFixed(2);
+        const numericCost = parseFloat(item.cost.replace('$', '')); // Convert cost to a numeric value
+        return (item.quantity * numericCost).toFixed(2); // Perform the calculation and format to two decimal places
     };
 
     return (
@@ -63,7 +74,7 @@ const CartItem = ({ onContinueShopping }) => {
             <div className="continue_shopping_btn">
                 <button className="get-started-button" onClick={(e) => handleContinueShopping(e)}>Continue Shopping</button>
                 <br />
-                <button className="get-started-button1">Checkout</button>
+                <button className="get-started-button1" onClick={() => alert('Coming soon!!')}>Checkout</button>
             </div>
         </div>
     );
